@@ -337,14 +337,11 @@ public class PlaylistCmd extends AdminCommand
 						String u = url.trim();
 						if(u.startsWith("<") && u.endsWith(">"))
 							u = u.substring(1, u.length()-1);
+						
 						if (!url.equals(item))
-						{
 							builder.append("\r\n").append(item);
-						}
 						else
-						{
 							hits++;
-						}
 					}
 			});
 
