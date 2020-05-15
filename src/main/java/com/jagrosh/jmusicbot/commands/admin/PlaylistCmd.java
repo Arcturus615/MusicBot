@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jagrosh.jmusicbot.commands.owner;
+package com.jagrosh.jmusicbot.commands.admin;
 
 import java.io.IOException;
 import java.util.List;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
-import com.jagrosh.jmusicbot.commands.OwnerCommand;
+import com.jagrosh.jmusicbot.commands.AdminCommand;
 import com.jagrosh.jmusicbot.playlist.PlaylistLoader.Playlist;
 
 /**
  *
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class PlaylistCmd extends OwnerCommand 
+public class PlaylistCmd extends AdminCommand 
 {
     private final Bot bot;
     public PlaylistCmd(Bot bot)
@@ -38,7 +38,7 @@ public class PlaylistCmd extends OwnerCommand
         this.arguments = "<append|delete|make|setdefault>";
         this.help = "playlist management";
         this.aliases = bot.getConfig().getAliases(this.name);
-        this.children = new OwnerCommand[]{
+        this.children = new AdminCommand[]{
             new ListCmd(),
             new AppendlistCmd(),
             new DeletelistCmd(),
@@ -57,7 +57,7 @@ public class PlaylistCmd extends OwnerCommand
         event.reply(builder.toString());
     }
     
-    public class MakelistCmd extends OwnerCommand 
+    public class MakelistCmd extends AdminCommand 
     {
         public MakelistCmd()
         {
@@ -89,7 +89,7 @@ public class PlaylistCmd extends OwnerCommand
         }
     }
     
-    public class DeletelistCmd extends OwnerCommand 
+    public class DeletelistCmd extends AdminCommand 
     {
         public DeletelistCmd()
         {
@@ -121,7 +121,7 @@ public class PlaylistCmd extends OwnerCommand
         }
     }
     
-    public class AppendlistCmd extends OwnerCommand 
+    public class AppendlistCmd extends AdminCommand 
     {
         public AppendlistCmd()
         {
@@ -182,7 +182,7 @@ public class PlaylistCmd extends OwnerCommand
         }
     }
     
-    public class ListCmd extends OwnerCommand 
+    public class ListCmd extends AdminCommand 
     {
         public ListCmd()
         {
