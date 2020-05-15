@@ -126,15 +126,16 @@ public class JMusicBot
                         new SetdjCmd(bot),
                         new SettcCmd(bot),
                         new SetvcCmd(bot),
-                        
-                        new AutoplaylistCmd(bot),
+						new QueueSaveCmd(bot),
+						new PlaylistCmd(bot),
+						new AutoplaylistCmd(bot),
+						new SetavatarCmd(bot),
+
                         new DebugCmd(bot),
-                        new PlaylistCmd(bot),
-                        new SetavatarCmd(bot),
                         new SetgameCmd(bot),
                         new SetnameCmd(bot),
                         new SetstatusCmd(bot),
-                        new ShutdownCmd(bot)
+						new ShutdownCmd(bot)
                 );
         if(config.useEval())
             cb.addCommand(new EvalCmd(bot));

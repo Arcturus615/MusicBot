@@ -50,7 +50,8 @@ public class PlaylistCmd extends AdminCommand
     @Override
     public void execute(CommandEvent event) 
     {
-        StringBuilder builder = new StringBuilder(event.getClient().getWarning()+" Playlist Management Commands:\n");
+		StringBuilder builder = new StringBuilder(event.getClient().getWarning()
+			+" Playlist Management Commands:\n");
         for(Command cmd: this.children)
             builder.append("\n`").append(event.getClient().getPrefix()).append(name).append(" ").append(cmd.getName())
                     .append(" ").append(cmd.getArguments()==null ? "" : cmd.getArguments()).append("` - ").append(cmd.getHelp());
@@ -214,5 +215,59 @@ public class PlaylistCmd extends AdminCommand
                 event.reply(builder.toString());
             }
         }
-    }
+	}
+	
+	/*
+	public class RemoveCmd extends AdminCommand
+	{
+		public RemoveCmd()
+		{
+			this.name = "remove";
+			this.help = "removes a specified URL from a playlist";
+			this.guildOnly = true;
+		}
+
+		@Override
+		protected void execute(CommandEvent event)
+		{
+			String[] parts = event.getArgs().split("\\s+", 2);
+			if(parts.length<2)
+			{
+				event.reply(event.getClient().getError()+" Please include a playlist name and URLs to remove!")
+				return;
+			}
+			String pname = parts[0];
+			Playlist playlist = bot.getPlaylistLoader.getPlaylist(pname);
+			if(playlist==null)
+			{
+				event.reply(event.getClient().getError()+" Playlist `"+pname+"` doesn't exist!");
+			}
+			else
+            {
+                StringBuilder builder = new StringBuilder();
+                playlist.getItems().forEach(item -> builder.append("\r\n").append(item));
+                String[] urls = parts[1].split("\\|");
+                for(String url: urls)
+                {
+                    String u = url.trim();
+                    if(u.startsWith("<") && u.endsWith(">"))
+                        u = u.substring(1, u.length()-1);
+                    if(!builder.indexOf(u))
+					{
+						
+					}
+                }
+                try
+                {
+                    bot.getPlaylistLoader().writePlaylist(pname, builder.toString());
+                    event.reply(event.getClient().getSuccess()+" Successfully added "+urls.length+" items to playlist `"+pname+"`!");
+                }
+                catch(IOException e)
+                {
+                    event.reply(event.getClient().getError()+" I was unable to append to the playlist: "+e.getLocalizedMessage());
+                }
+            }
+		}
+	}
+	*/
 }

@@ -69,8 +69,8 @@ public class QueueCmd extends MusicCommand
         try
         {
             pagenum = Integer.parseInt(event.getArgs());
-        }
-        catch(NumberFormatException ignore){}
+		}
+		catch(NumberFormatException ignore){}
         AudioHandler ah = (AudioHandler)event.getGuild().getAudioManager().getSendingHandler();
         List<QueuedTrack> list = ah.getQueue().getList();
         if(list.isEmpty())

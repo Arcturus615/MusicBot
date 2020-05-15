@@ -49,10 +49,15 @@ public class QueuedTrack implements Queueable
     {
         return track;
     }
+ 
+	public String getUrl()
+	{
+		return track.getInfo().uri;
+	}
 
     @Override
     public String toString() 
     {
         return "`[" + FormatUtil.formatTime(track.getDuration()) + "]` **" + track.getInfo().title + "** - <@" + track.getUserData(Long.class) + ">";
-    }
+	}
 }
