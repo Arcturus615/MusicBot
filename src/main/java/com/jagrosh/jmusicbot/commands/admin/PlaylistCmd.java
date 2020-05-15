@@ -311,11 +311,10 @@ public class PlaylistCmd extends AdminCommand
 		protected void execute(CommandEvent event)
 		{
 			int hits = 0;
-
 			String[] parts = event.getArgs().split("\\s+", 2);
 			if(parts.length<2)
 			{
-				event.reply(event.getClient().getError()+" Please include a playlist name and URLs to remove!")
+				event.reply(event.getClient().getError()+" Please include a playlist name and URLs to remove!");
 				return;
 			}
 
@@ -329,21 +328,17 @@ public class PlaylistCmd extends AdminCommand
 				return;
 			}
 
-			String[] urls = parts[1].split("\\|");
-
-			playlist.getItems().forEach(item -> {
-					for (String url : urls)
-					{
-						String u = url.trim();
-						if(u.startsWith("<") && u.endsWith(">"))
-							u = u.substring(1, u.length()-1);
-						
-						if (!url.equals(item))
-							builder.append("\r\n").append(item);
-						else
-							hits++;
-					}
-			});
+			for (String item : playlist.getItems())
+				for (String url : parts[1].split("\\|"))
+				{
+					String u = url.trim();
+					if(u.startsWith("<") && u.endsWith(">"))
+						u = u.substring(1, u.length()-1);
+					if (!url.equals(item))
+						builder.append("\r\n").append(item);
+					else
+						hits++;
+				}
 
 			if (hits>0)
 			{
