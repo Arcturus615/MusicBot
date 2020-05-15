@@ -126,7 +126,6 @@ public class JMusicBot
                         new SetdjCmd(bot),
                         new SettcCmd(bot),
                         new SetvcCmd(bot),
-						new QueueSaveCmd(bot),
 						new PlaylistCmd(bot),
 						new AutoplaylistCmd(bot),
 						new SetavatarCmd(bot),

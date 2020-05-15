@@ -22,6 +22,8 @@ import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.commands.AdminCommand;
 import com.jagrosh.jmusicbot.playlist.PlaylistLoader.Playlist;
+import com.jagrosh.jmusicbot.audio.AudioHandler;
+import com.jagrosh.jmusicbot.audio.QueuedTrack;
 
 /**
  *
@@ -29,10 +31,11 @@ import com.jagrosh.jmusicbot.playlist.PlaylistLoader.Playlist;
  */
 public class PlaylistCmd extends AdminCommand 
 {
-    private final Bot bot;
+	private final Bot bot;
+
     public PlaylistCmd(Bot bot)
     {
-        this.bot = bot;
+		this.bot = bot;
         this.guildOnly = false;
         this.name = "playlist";
         this.arguments = "<append|delete|make|setdefault>";
@@ -44,12 +47,26 @@ public class PlaylistCmd extends AdminCommand
             new DeletelistCmd(),
             new MakelistCmd(),
             new DefaultlistCmd(bot)
-        };
+		};
     }
+
+	private void SetupDirectory(CommandEvent event)
+	{
+		if(!bot.getPlaylistLoader().folderExists())
+			bot.getPlaylistLoader().createFolder();
+		if(!bot.getPlaylistLoader().folderExists())
+		{
+			event.reply(event.getClient().getWarning()+" Playlists folder does not exist and could not be created!");
+			return;
+		}
+	}
 
     @Override
     public void execute(CommandEvent event) 
     {
+		// Make sure our directory even exists before we do anything.
+		SetupDirectory(event);
+
 		StringBuilder builder = new StringBuilder(event.getClient().getWarning()
 			+" Playlist Management Commands:\n");
         for(Command cmd: this.children)
@@ -196,13 +213,6 @@ public class PlaylistCmd extends AdminCommand
         @Override
         protected void execute(CommandEvent event) 
         {
-            if(!bot.getPlaylistLoader().folderExists())
-                bot.getPlaylistLoader().createFolder();
-            if(!bot.getPlaylistLoader().folderExists())
-            {
-                event.reply(event.getClient().getWarning()+" Playlists folder does not exist and could not be created!");
-                return;
-            }
             List<String> list = bot.getPlaylistLoader().getPlaylistNames();
             if(list==null)
                 event.reply(event.getClient().getError()+" Failed to load available playlists!");
@@ -217,57 +227,142 @@ public class PlaylistCmd extends AdminCommand
         }
 	}
 	
-	/*
-	public class RemoveCmd extends AdminCommand
+	public class SaveQueueCmd extends AdminCommand
 	{
-		public RemoveCmd()
+		public SaveQueueCmd()
 		{
-			this.name = "remove";
-			this.help = "removes a specified URL from a playlist";
+			this.name = "save";
+			this.help = "save the queue to a playlist";
+			this.arguments = "<name>";
 			this.guildOnly = true;
 		}
 
 		@Override
 		protected void execute(CommandEvent event)
 		{
+			if (event.getArgs().isEmpty())
+			{
+				event.replyError("Please provide a name for the new playlist");
+				return;
+			}
+			
+			String pname = event.getArgs().replaceAll("\\s+", "_");
+			
+			if(bot.getPlaylistLoader().getPlaylist(pname)==null)
+			{
+				try
+				{
+					bot.getPlaylistLoader().createPlaylist(pname);
+				}
+				catch(IOException e)
+				{
+					event.reply(event.getClient().getError()+" Failed to create the playlist: "+e.getLocalizedMessage());
+					return;
+				}
+			}
+			else
+			{
+				event.reply(event.getClient().getError()+" Playlist `"+pname+"` already exists!");
+				return;
+			}
+
+			AudioHandler ah = (AudioHandler)event.getGuild().getAudioManager().getSendingHandler();
+			List<QueuedTrack> alist = ah.getQueue().getList();
+			StringBuilder builder = new StringBuilder();
+			int total = 0;
+
+			if(alist.isEmpty())
+			{
+				event.replyError(" Cant save an empty playlist");
+				return;
+			}
+
+			if(ah.isMusicPlaying(event.getJDA()))
+			{
+				// Save the current track as well.
+				builder.append("\r\n").append(ah.getPlayer().getPlayingTrack().getInfo().uri);
+				total++;
+			}
+
+			alist.forEach(item -> builder.append("\r\n").append(item.getUrl()));
+			total = total + alist.size();
+			try{
+				bot.getPlaylistLoader().writePlaylist(pname, builder.toString());
+				event.reply(event.getClient().getSuccess()+" Successfully saved "+total+" items as playlist `"+pname+"`!");
+			}
+			catch(IOException e)
+			{
+				event.reply(event.getClient().getError()+" Unable to save the playlist: "+e.getLocalizedMessage());
+			}
+		}
+	}
+
+	public class RemoveCmd extends AdminCommand
+	{
+		public RemoveCmd()
+		{
+			this.name = "remove";
+			this.help = "removes specified URLs from a playlist";
+			this.arguments = "<name> | <URL> | <URL> | ...";
+			this.guildOnly = true;
+		}
+
+		@Override
+		protected void execute(CommandEvent event)
+		{
+			int hits = 0;
+
 			String[] parts = event.getArgs().split("\\s+", 2);
 			if(parts.length<2)
 			{
 				event.reply(event.getClient().getError()+" Please include a playlist name and URLs to remove!")
 				return;
 			}
+
 			String pname = parts[0];
-			Playlist playlist = bot.getPlaylistLoader.getPlaylist(pname);
+			Playlist playlist = bot.getPlaylistLoader().getPlaylist(pname);
+			StringBuilder builder = new StringBuilder();
+
 			if(playlist==null)
 			{
 				event.reply(event.getClient().getError()+" Playlist `"+pname+"` doesn't exist!");
+				return;
 			}
-			else
-            {
-                StringBuilder builder = new StringBuilder();
-                playlist.getItems().forEach(item -> builder.append("\r\n").append(item));
-                String[] urls = parts[1].split("\\|");
-                for(String url: urls)
-                {
-                    String u = url.trim();
-                    if(u.startsWith("<") && u.endsWith(">"))
-                        u = u.substring(1, u.length()-1);
-                    if(!builder.indexOf(u))
+
+			String[] urls = parts[1].split("\\|");
+
+			playlist.getItems().forEach(item -> {
+					for (String url : urls)
 					{
-						
+						String u = url.trim();
+						if(u.startsWith("<") && u.endsWith(">"))
+							u = u.substring(1, u.length()-1);
+						if (!url.equals(item))
+						{
+							builder.append("\r\n").append(item);
+						}
+						else
+						{
+							hits++;
+						}
 					}
-                }
-                try
-                {
-                    bot.getPlaylistLoader().writePlaylist(pname, builder.toString());
-                    event.reply(event.getClient().getSuccess()+" Successfully added "+urls.length+" items to playlist `"+pname+"`!");
-                }
-                catch(IOException e)
-                {
-                    event.reply(event.getClient().getError()+" I was unable to append to the playlist: "+e.getLocalizedMessage());
-                }
-            }
+			});
+
+			if (hits>0)
+			{
+				event.replyError("No URL matches found");
+				return;
+			}
+
+			try
+			{
+				bot.getPlaylistLoader().writePlaylist(pname, builder.toString());
+				event.reply(event.getClient().getSuccess()+" Successfully removed "+hits+" items from playlist `"+pname+"`!");
+			}
+			catch(IOException e)
+			{
+				event.reply(event.getClient().getError()+" I was unable to save to the playlist: "+e.getLocalizedMessage());
+			}
 		}
 	}
-	*/
 }
